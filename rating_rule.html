@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOFAS Scoring Tool</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; max-width: 600px; margin: 40px auto; padding: 20px; background: #f4f7f6; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .hidden { display: none; }
+        select, button { width: 100%; padding: 10px; margin-top: 10px; border-radius: 4px; border: 1px solid #ccc; font-size: 16px; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; font-weight: bold; }
+        button:hover { background: #0056b3; }
+        .result-box { margin-top: 20px; padding: 15px; background: #e7f3ff; border-left: 5px solid #007bff; }
+        h2 { color: #333; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>SOFAS Assessment</h2>
+    <hr>
+    
+    <div id="quiz-container">
+        </div>
+
+    <div id="result-area" class="hidden">
+        <div class="result-box">
+            <h3>Final Assessment</h3>
+            <p>Functional Score Range: <strong id="func-score">--</strong></p>
+            <p>Social Score Range: <strong id="social-score">--</strong></p>
+            <hr>
+            <p><strong>Final SOFAS Score: <span id="final-score">--</span></strong></p>
+        </div>
+        <button onclick="location.reload()">Start New Assessment</button>
+    </div>
+</div>
+
+<script>
+const data = {
+    q1: { text: "1. Does the client have the need for a work role?", options: [
+        { label: "Yes", next: "q2" },
+        { label: "No", next: "q2" }
+    ]},
+    q2: { text: "2. Setting of service?", options: [
+        { label: "In-patient", next: "q3" },
+        { label: "Day-patient & Outpatient", next: "q5" }
+    ]},
+    q3: { text: "3. Client’s ability during in-patient service?", options: [
+        { label: "Unable to join WOT / on SO", score: [0, 30], next: "q13" },
+        { label: "Able to join WOT", score: [31, 40], next: "q14" },
+        { label: "Able to join MOT", next: "q4" }
+    ]},
+    q4: { text: "4. Performance in MOT?", options: [
+        { label: "Poor attendance/performance", score: [41, 50], next: "q14" },
+        { label: "Fair attendance/performance", score: [51, 60], next: "q14" },
+        { label: "Good attendance/performance", score: [61, 70], next: "q14" }
+    ]},
+    q5: { text: "5. Client’s current level in work?", options: [
+        { label: "Unable to attend training", next: "q13" },
+        { label: "Able to attend training", next: "q6" },
+        { label: "Group placement / SWS level", next: "q7" },
+        { label: "TE / SE level", next: "q8" },
+        { label: "OE level", next: "q9" }
+    ]},
+    q6: { text: "6. Performance in training?", options: [
+        { label: "Poor", next: "q13" },
+        { label: "Fair", score: [31, 40], next: "q14" },
+        { label: "Good", score: [41, 50], next: "q14" }
+    ]},
+    q7: { text: "7. Performance in group placement / SWS?", options: [
+        { label: "Fair", score: [41, 50], next: "q14" },
+        { label: "Good", score: [51, 60], next: "q14" }
+    ]},
+    q8: { text: "8. Performance in TE / SE?", options: [
+        { label: "Poor", score: [41, 50], next: "q14" },
+        { label: "Fair", score: [51, 60], next: "q14" },
+        { label: "Good", score: [61, 70], next: "q14" }
+    ]},
+    q9: { text: "9. Performance in OE?", options: [
+        { label: "Poor", score: [51, 60], next: "q10" },
+        { label: "Fair", score: [61, 70], next: "q10" },
+        { label: "Satisfactory", score: [71, 80], next: "q10" },
+        { label: "Good", score: [81, 90], next: "q10" },
+        { label: "Outstanding", score: [91, 100], next: "q10" }
+    ]},
+    q10: { text: "10. Able to cope with community living tasks?", options: [
+        { label: "No", next: "q12" },
+        { label: "Yes", next: "q11" }
+    ]},
+    q11: { text: "11. Performance in community living tasks?", options: [
+        { label: "Poor", score: [51, 60], next: "q14" },
+        { label: "Fair", score: [61, 70], next: "q14" },
+        { label: "Satisfactory", score: [71, 80], next: "q14" },
+        { label: "Good", score: [81, 90], next: "q14" },
+        { label: "Outstanding", score: [91, 100], next: "q14" }
+    ]},
+    q12: { text: "12. Daytime engagement?", options: [
+        { label: "No", next: "q13" },
+        { label: "Partial", score: [31, 40], next: "q14" },
+        { label: "Fully engaged", score: [41, 50], next: "q14" }
+    ]},
+    q13: { text: "13. Maintenance of personal hygiene?", options: [
+        { label: "Need assistance", score: [0, 10], next: "q14" },
+        { label: "Fair hygiene", score: [11, 20], next: "q14" },
+        { label: "Hygiene maintained", score: [21, 30], next: "q14" }
+    ]},
+    q14: { text: "FINAL: Performance in social functioning?", options: [
+        { label: "Poor relationship with others", score: [31, 40] },
+        { label: "Borderline with frequent conflicts", score: [41, 50] },
+        { label: "Fair with sometimes conflicts", score: [51, 60] },
+        { label: "Fair with occasional conflicts", score: [61, 70] },
+        { label: "Satisfactory", score: [71, 80] },
+        { label: "Good", score: [81, 90] },
+        { label: "Outstanding", score: [91, 100] }
+    ]}
+};
+
+let currentFunctionalScore = [0, 0];
+let socialScore = [0, 0];
+
+function renderQuestion(id) {
+    const q = data[id];
+    const container = document.getElementById('quiz-container');
+    container.innerHTML = `<p><strong>${q.text}</strong></p>`;
+    
+    q.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.innerText = opt.label;
+        btn.onclick = () => {
+            if (opt.score && id !== 'q14') currentFunctionalScore = opt.score;
+            if (opt.score && id === 'q14') {
+                socialScore = opt.score;
+                showResult();
+            } else {
+                renderQuestion(opt.next);
+            }
+        };
+        container.appendChild(btn);
+    });
+}
+
+function showResult() {
+    document.getElementById('quiz-container').classList.add('hidden');
+    document.getElementById('result-area').classList.remove('hidden');
+    
+    const fRange = `${currentFunctionalScore[0]}-${currentFunctionalScore[1]}`;
+    const sRange = `${socialScore[0]}-${socialScore[1]}`;
+    
+    document.getElementById('func-score').innerText = fRange;
+    document.getElementById('social-score').innerText = sRange;
+    
+    // Logic: Use the lower score range as result
+    const finalRange = (currentFunctionalScore[0] <= socialScore[0]) ? fRange : sRange;
+    document.getElementById('final-score').innerText = finalRange;
+}
+
+renderQuestion('q1');
+</script>
+
+</body>
+</html>
+
