@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SOFAS Score Calculator (Updated Flow + Interpretation)</title>
+<title>SOFAS Score Calculator (Restart Fixed)</title>
 <style>
   :root {
     --primary: #4f46e5;
@@ -14,166 +14,128 @@
     --warning: #f59e0b;
     --danger: #ef4444;
   }
-
   body {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: system-ui, sans-serif;
     background: linear-gradient(to bottom, #f3f4f6, #e5e7eb);
-    margin: 0;
-    padding: 20px 12px;
-    color: #1f2937;
-    line-height: 1.6;
+    margin:0;
+    padding:20px 12px;
+    color:#1f2937;
+    line-height:1.6;
   }
-
   .container {
-    max-width: 760px;
-    margin: 0 auto;
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    overflow: hidden;
+    max-width:760px;
+    margin:0 auto;
+    background:white;
+    border-radius:16px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.1);
+    overflow:hidden;
   }
-
   .header {
-    background: var(--primary);
-    color: white;
-    padding: 28px 32px;
-    text-align: center;
+    background:var(--primary);
+    color:white;
+    padding:28px 32px;
+    text-align:center;
   }
-
-  h1 { margin: 0; font-size: 1.9rem; font-weight: 600; }
-  .subtitle { margin: 10px 0 0; font-size: 1rem; opacity: 0.92; }
-
+  h1 { margin:0; font-size:1.9rem; font-weight:600; }
+  .subtitle { margin:10px 0 0; font-size:1rem; opacity:0.92; }
   .progress {
-    height: 8px;
-    background: #e5e7eb;
-    margin: 0 32px 16px;
-    border-radius: 4px;
-    overflow: hidden;
+    height:8px;
+    background:#98fb98;
+    margin:0 32px 16px;
+    border-radius:4px;
+    overflow:hidden;
   }
-
   .progress-bar {
-    height: 100%;
-    background: linear-gradient(to right, #6366f1, #8b5cf6);
-    width: 0%;
-    transition: width 0.6s ease;
+    height:100%;
+    background:linear-gradient(to right, #6366f1, #8b5cf6);
+    width:0%;
+    transition:width 0.6s ease;
   }
-
-  .content { padding: 28px 32px; }
-
+  .content { padding:28px 32px; }
   .question {
-    margin-bottom: 32px;
-    display: none;
+    margin-bottom:32px;
+    display:none;
   }
-
   .question.active {
-    display: block;
-    animation: fadeIn 0.35s ease-out;
+    display:block;
+    animation:fadeIn 0.35s ease-out;
   }
-
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {opacity:0; transform:translateY(12px);}
+    to {opacity:1; transform:translateY(0);}
   }
-
   .question-title {
-    font-weight: 600;
-    font-size: 1.18rem;
-    margin-bottom: 16px;
-    color: #111827;
+    font-weight:600;
+    font-size:1.18rem;
+    margin-bottom:16px;
+    color:#111827;
   }
-
   .option {
-    display: flex;
-    align-items: center;
-    padding: 16px 20px;
-    margin: 10px 0;
-    background: var(--light);
-    border: 2px solid #d1d5db;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.22s;
-    font-size: 1.02rem;
+    display:flex;
+    align-items:center;
+    padding:16px 20px;
+    margin:10px 0;
+    background:var(--light);
+    border:2px solid #d1d5db;
+    border-radius:12px;
+    cursor:pointer;
+    transition:all 0.22s;
+    font-size:1.02rem;
   }
-
   .option:hover {
-    background: #eef2ff;
-    border-color: var(--primary);
-    transform: translateX(4px);
+    background:#eef2ff;
+    border-color:var(--primary);
+    transform:translateX(4px);
   }
-
   input[type="radio"] {
-    margin-right: 14px;
-    accent-color: var(--primary);
+    margin-right:14px;
+    accent-color:var(--primary);
   }
-
   .result-box {
-    background: #f0fdf4;
-    border: 2px solid var(--success);
-    border-radius: 14px;
-    padding: 32px 24px;
-    margin: 20px 0;
+    background:#f0fdf4;
+    border:2px solid var(--success);
+    border-radius:14px;
+    padding:32px 24px;
+    margin:20px 0;
+    text-align:center;
   }
-
   .score-display {
-    font-size: 3.8rem;
-    font-weight: 700;
-    color: var(--primary);
-    margin: 16px 0 8px;
+    font-size:3.8rem;
+    font-weight:700;
+    color:var(--primary);
+    margin:16px 0 8px;
   }
-
-  .interpretation {
-    margin-top: 32px;
-    padding-top: 24px;
-    border-top: 1px solid #d1d5db;
-  }
-
-  .interpretation h3 {
-    margin: 0 0 16px;
-    color: #111827;
-  }
-
-  .level {
-    margin: 12px 0;
-    padding: 12px 16px;
-    border-radius: 8px;
-    background: #f3f4f6;
-  }
-
-  .level.high    { background: #ecfdf5; border-left: 5px solid var(--success); }
-  .level.moderate { background: #fffbeb; border-left: 5px solid var(--warning); }
-  .level.low      { background: #fef2f2; border-left: 5px solid var(--danger); }
-
   .btn {
-    padding: 14px 36px;
-    background: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    margin-top: 20px;
+    padding:14px 36px;
+    background:var(--primary);
+    color:white;
+    border:none;
+    border-radius:12px;
+    font-size:1.1rem;
+    font-weight:600;
+    cursor:pointer;
+    transition:all 0.2s;
+    margin-top:20px;
   }
-
   .btn:hover {
-    background: var(--primary-dark);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(79,70,229,0.3);
+    background:var(--primary-dark);
+    transform:translateY(-2px);
+    box-shadow:0 6px 16px rgba(79,70,229,0.3);
   }
-
-  .note {
-    font-size: 0.9rem;
-    color: var(--gray);
-    text-align: center;
-    margin-top: 32px;
+  .interpretation {
+    margin-top:32px;
+    padding-top:24px;
+    border-top:1px solid #d1d5db;
   }
-
-  @media (max-width: 600px) {
-    .content { padding: 24px 20px; }
-    .header { padding: 24px 20px; }
-    .score-display { font-size: 3.2rem; }
+  .level {
+    margin:12px 0;
+    padding:12px 16px;
+    border-radius:8px;
+    background:#f3f4f6;
   }
+  .level.high    { background:#ecfdf5; border-left:5px solid var(--success); }
+  .level.moderate { background:#fffbeb; border-left:5px solid var(--warning); }
+  .level.low      { background:#fef2f2; border-left:5px solid var(--danger); }
 </style>
 </head>
 <body>
@@ -181,22 +143,19 @@
 <div class="container">
   <div class="header">
     <h1>SOFAS Score Calculator</h1>
-    <div class="subtitle">Updated Assessment Flow with Interpretation Guide</div>
+    <div class="subtitle">QMH OT (PSY) internal reference</div>
   </div>
-
   <div class="progress">
     <div class="progress-bar" id="progressBar"></div>
   </div>
-
   <div class="content" id="questionsContainer"></div>
-
   <div class="content" id="resultContainer" style="display:none;">
     <div class="result-box">
       <h2>Final SOFAS Score Range</h2>
       <div class="score-display" id="finalScore">-- – --</div>
-      <p id="explanation">Complete the assessment to see the result</p>
+      <p id="explanation"></p>
 
-      <div class="interpretation" id="interpretationSection">
+      <div class="interpretation">
         <h3>Score Interpretation Guide</h3>
         <div id="interpretationContent"></div>
       </div>
@@ -204,169 +163,203 @@
       <button class="btn" onclick="resetAssessment()">Restart Assessment</button>
     </div>
   </div>
-
-  <div class="note">
-    Final score = lower of the functional pathway (Q1–Q13, incl. hygiene if applicable) vs social functioning (Q14).<br>
-    SOFAS focuses on social & occupational functioning (not symptoms).
-  </div>
 </div>
 
 <script>
-// ── Questions (unchanged from previous version) ───────────────────────
-const questions = [
-  { id: "q1", text: "Does the client have the need for a work role?", options: [
-    { text: "Yes", next: "q2" }, { text: "No", next: "q11" }
-  ]},
-  { id: "q2", text: "Is this rating during in-patient service or day-patient & outpatient service?", options: [
-    { text: "In-patient", next: "q3" }, { text: "Day-patient & outpatient service", next: "q5" }
-  ]},
-  { id: "q3", text: "Client’s ability during in-patient service?", options: [
-    { text: "Unable to join WOT / on SO", next: "q13" },
-    { text: "Able to join WOT", score: "31–40" },
-    { text: "Able to join MOT", next: "q4" }
-  ]},
-  { id: "q4", text: "Client’s performance in MOT?", options: [
-    { text: "Poor attendance / performance", score: "41-50" },
-    { text: "Fair attendance / performance", score: "51-60" },
-    { text: "Good attendance and performance", score: "61-70" }
-  ]},
-  { id: "q5", text: "Client’s current level in work?", options: [
-    { text: "Unable to attend training", next: "q13" },
-    { text: "Able to attend training", next: "q6" },
-    { text: "Group placement / SWS level", next: "q7" },
-    { text: "TE / SE level", next: "q8" },
-    { text: "OE level", next: "q9" }
-  ]},
-  { id: "q6", text: "Client’s performance in training?", options: [
-    { text: "Poor", next: "q13" },
-    { text: "Fair", score: "31-40" },
-    { text: "Good", score: "41-50" }
-  ]},
-  { id: "q7", text: "Client’s performance in group placement / SWS?", options: [
-    { text: "Fair", score: "41-50" }, { text: "Good", score: "51-60" }
-  ]},
-  { id: "q8", text: "Client’s performance in TE / SE?", options: [
-    { text: "Poor", score: "41-50" }, { text: "Fair", score: "51-60" }, { text: "Good", score: "61-70" }
-  ]},
-  { id: "q9", text: "Client’s performance in OE?", options: [
-    { text: "Poor", score: "51-60" }, { text: "Fair", score: "61-70" },
-    { text: "Satisfactory", score: "71-80" }, { text: "Good", score: "81-90" }, { text: "Outstanding", score: "91-100" }
-  ]},
-  { id: "q10", text: "Able to cope with community living tasks?", options: [
-    { text: "No", next: "q12" }, { text: "Yes", next: "q11" }
-  ]},
-  { id: "q11", text: "Client’s performance in community living tasks?", options: [
-    { text: "Poor", score: "51-60" }, { text: "Fair", score: "61-70" },
-    { text: "Satisfactory", score: "71-80" }, { text: "Good", score: "81-90" }, { text: "Outstanding", score: "91-100" }
-  ]},
-  { id: "q12", text: "Does the client have daytime engagement?", options: [
-    { text: "No", next: "q13" }, { text: "Partial", score: "31-40" }, { text: "Fully engaged", score: "41-50" }
-  ]},
-  { id: "q13", text: "Able to maintain own personal hygiene?", options: [
-    { text: "Need assistance", score: "0-10" },
-    { text: "Fair hygiene", score: "11-20" },
-    { text: "Hygiene maintained", score: "21-30" }
-  ], isHygiene: true },
-  { id: "q14", text: "<strong>Required:</strong> Performance in social functioning?", options: [
-    { text: "Poor relationship with others", score: "31-40" },
-    { text: "Borderline with frequent conflicts", score: "41-50" },
-    { text: "Fair with sometimes conflicts", score: "51-60" },
-    { text: "Fair with occasional conflicts", score: "61-70" },
-    { text: "Satisfactory", score: "71-80" },
-    { text: "Good", score: "81-90" },
-    { text: "Outstanding", score: "91-100" }
-  ], isSocial: true }
-];
+document.addEventListener('DOMContentLoaded', () => {
 
-// ── State ─────────────────────────────────────────────────────────────
-let currentId = "q1";
-let answers = {};
-let pathwayScore = null;
-let hygieneScore = null;
-let socialScore = null;
+  // Questions
+  const questions = [
+    {id:"q1", text:"Does the client have the need for a work role?", options:[{text:"Yes", next:"q2"},{text:"No", next:"q11"}]},
+    {id:"q2", text:"Is this rating during in-patient or day-patient & outpatient service?", options:[{text:"In-patient", next:"q3"},{text:"Day-patient & outpatient service", next:"q5"}]},
+    {id:"q3", text:"Client’s ability during in-patient service?", options:[{text:"Unable to join WOT / on SO", next:"q13"},{text:"Able to join WOT", score:"31–40"},{text:"Able to join MOT", next:"q4"}]},
+    {id:"q4", text:"Client’s performance in MOT?", options:[{text:"Poor attendance / performance", score:"41-50"},{text:"Fair attendance / performance", score:"51-60"},{text:"Good attendance and performance", score:"61-70"}]},
+    {id:"q5", text:"Client’s current level in work?", options:[{text:"Unable to attend training", next:"q13"},{text:"Able to attend training", next:"q6"},{text:"Group placement / SWS level", next:"q7"},{text:"TE / SE level", next:"q8"},{text:"OE level", next:"q9"}]},
+    {id:"q6", text:"Client’s performance in training?", options:[{text:"Poor", next:"q13"},{text:"Fair", score:"31-40"},{text:"Good", score:"41-50"}]},
+    {id:"q7", text:"Client’s performance in group placement / SWS?", options:[{text:"Fair", score:"41-50"},{text:"Good", score:"51-60"}]},
+    {id:"q8", text:"Client’s performance in TE / SE?", options:[{text:"Poor", score:"41-50"},{text:"Fair", score:"51-60"},{text:"Good", score:"61-70"}]},
+    {id:"q9", text:"Client’s performance in OE?", options:[{text:"Poor", score:"51-60"},{text:"Fair, some difficulty", score:"61-70"},{text:"Average, slight difficulty", score:"71-80"},{text:"Good", score:"81-90"},{text:"Outstanding", score:"91-100"}]},
+    {id:"q10", text:"Able to cope with community living tasks?", options:[{text:"No", next:"q12"},{text:"Yes", next:"q11"}]},
+    {id:"q11", text:"Client’s performance in community living tasks?", options:[{text:"Poor", score:"51-60"},{text:"Fair", score:"61-70"},{text:"Satisfactory", score:"71-80"},{text:"Good", score:"81-90"},{text:"Outstanding", score:"91-100"}]},
+    {id:"q12", text:"Does the client have daytime engagement?", options:[{text:"No", next:"q13"},{text:"Partial", score:"31-40"},{text:"Fully engaged", score:"41-50"}]},
+    {id:"q13", text:"Able to maintain own personal hygiene?", options:[{text:"Need assistance", score:"0-10"},{text:"Fair hygiene", score:"11-20"},{text:"Hygiene maintained", score:"21-30"}], isHygiene:true},
+    {id:"q14", text:"<strong>Required:</strong> Performance in social functioning?", options:[
+      {text:"Poor relationship with others", score:"31-40"},
+      {text:"Borderline with frequent conflicts", score:"41-50"},
+      {text:"Fair with sometimes conflicts", score:"51-60"},
+      {text:"Fair with occasional conflicts", score:"61-70"},
+      {text:"Satisfactory", score:"71-80"},
+      {text:"Good", score:"81-90"},
+      {text:"Outstanding", score:"91-100"}
+    ], isSocial:true}
+  ];
 
-// ── DOM ───────────────────────────────────────────────────────────────
-const qContainer = document.getElementById("questionsContainer");
-const resultContainer = document.getElementById("resultContainer");
-const progressBar = document.getElementById("progressBar");
-const interpContent = document.getElementById("interpretationContent");
+  // State
+  let currentId = "q1";
+  let answers = {};
+  let pathwayScore = null;
+  let hygieneScore = null;
+  let socialScore = null;
 
-// ── Interpretation Guide (based on standard SOFAS anchors) ───────────
-const interpretationGuide = [
-  { range: "91–100", label: "Superior / Outstanding", desc: "Superior functioning in a wide range of social and occupational activities. No or extremely minor limitations.", class: "high" },
-  { range: "81–90",  label: "Good", desc: "Good functioning in all areas; occupationally and socially effective. Generally effective with minimal or no support needed.", class: "high" },
-  { range: "71–80",  label: "Satisfactory / Slight impairment", desc: "Slight impairment in social/occupational functioning or occasional mild symptoms, but overall functioning well with meaningful relationships and productivity.", class: "high" },
-  { range: "61–70",  label: "Fair / Mild to moderate impairment", desc: "Some mild to moderate difficulty in social, occupational, or community functioning (e.g., occasional conflicts, reduced performance), but generally managing.", class: "moderate" },
-  { range: "51–60",  label: "Moderate difficulty", desc: "Moderate difficulty in social and occupational functioning (e.g., few friends, conflicts with peers/co-workers, fair performance at best).", class: "moderate" },
-  { range: "41–50",  label: "Serious impairment", desc: "Serious impairment — unable to maintain employment or education, few or no friends, serious conflicts or withdrawal.", class: "low" },
-  { range: "31–40",  label: "Major impairment", desc: "Major impairment in several areas (e.g., avoids social contact, unable to work or manage daily tasks independently, hygiene issues possible).", class: "low" },
-  { range: "21–30",  label: "Very poor functioning", desc: "Very poor social/occupational functioning; major assistance needed for basic activities (hygiene maintained at best).", class: "low" },
-  { range: "11–20",  label: "Poor functioning / needs assistance", desc: "Major impairment; fair hygiene at best, unable to function independently in most areas.", class: "low" },
-  { range: "0–10",   label: "Grossly impaired", desc: "Grossly impaired functioning; needs constant assistance (e.g., for hygiene), minimal or no social/occupational engagement.", class: "low" }
-];
+  // DOM elements
+  const qContainer = document.getElementById("questionsContainer");
+  const resultContainer = document.getElementById("resultContainer");
+  const progressBar = document.getElementById("progressBar");
+  const interpContent = document.getElementById("interpretationContent");
 
-function getInterpretation(rangeStr) {
-  if (!rangeStr || rangeStr === "??-??") return "<p>Interpretation not available — please complete assessment.</p>";
+  function renderQuestion() {
+    qContainer.innerHTML = "";
 
-  const mid = rangeStr.includes("–") ? 
-    (parseInt(rangeStr.split("–")[0]) + parseInt(rangeStr.split("–")[1])) / 2 : parseInt(rangeStr);
+    const q = questions.find(q => q.id === currentId);
+    if (!q) return;
 
-  for (const item of interpretationGuide) {
-    const [low, high] = item.range.split("–").map(n => parseInt(n));
-    if (mid >= low && mid <= high) {
-      return `
-        <div class="level ${item.class}">
+    const wrapper = document.createElement("div");
+    wrapper.className = "question active";
+
+    const title = document.createElement("div");
+    title.className = "question-title";
+    title.innerHTML = q.text;
+    wrapper.appendChild(title);
+
+    q.options.forEach((opt, i) => {
+      const label = document.createElement("label");
+      label.className = "option";
+
+      const input = document.createElement("input");
+      input.type = "radio";
+      input.name = q.id;
+      input.value = i;
+      if (answers[q.id] === i) input.checked = true;
+
+      label.appendChild(input);
+      label.appendChild(document.createTextNode(" " + opt.text));
+
+      label.addEventListener("change", () => {
+        answers[q.id] = i;
+
+        if (opt.score) {
+          if (q.isHygiene) hygieneScore = opt.score;
+          else if (q.isSocial) socialScore = opt.score;
+          else pathwayScore = opt.score;
+        }
+
+        if (opt.next) {
+          currentId = opt.next;
+          updateProgress();
+          renderQuestion();
+        } else if (currentId !== "q14") {
+          currentId = "q14";
+          updateProgress();
+          renderQuestion();
+        } else {
+          showResult();
+        }
+      });
+
+      wrapper.appendChild(label);
+    });
+
+    qContainer.appendChild(wrapper);
+  }
+
+  function updateProgress() {
+    const answered = Object.keys(answers).length;
+    const percent = Math.min(100, (answered / 14) * 100);
+    progressBar.style.width = percent + "%";
+  }
+
+  function showResult() {
+    qContainer.style.display = "none";
+    resultContainer.style.display = "block";
+
+    if (!socialScore) {
+      document.getElementById("finalScore").textContent = "Incomplete";
+      document.getElementById("explanation").textContent = "Social functioning (Q14) is required";
+      interpContent.innerHTML = "";
+      return;
+    }
+
+    let finalRange = socialScore;
+    if (pathwayScore) finalRange = getLowerRange(pathwayScore, socialScore);
+    if (hygieneScore) finalRange = getLowerRange(finalRange, hygieneScore);
+
+    document.getElementById("finalScore").textContent = finalRange;
+    document.getElementById("explanation").textContent =
+      `Lower of pathway (${pathwayScore || "—"}) and social (${socialScore})` +
+      (hygieneScore ? ` (hygiene: ${hygieneScore})` : "");
+
+    interpContent.innerHTML = getInterpretation(finalRange);
+  }
+
+  function getLowerRange(a, b) {
+    if (!a || !b) return "??-??";
+    const [aLow, aHigh] = a.split(/–|-/).map(n => parseInt(n.trim()));
+    const [bLow, bHigh] = b.split(/–|-/).map(n => parseInt(n.trim()));
+    if (isNaN(aLow) || isNaN(bLow)) return "??-??";
+
+    const lowerLow = Math.max(aLow, bLow);
+    const lowerHigh = Math.min(aHigh, bHigh);
+
+    if (lowerLow > lowerHigh) {
+      return aHigh < bLow ? a : b;
+    }
+    return `${lowerLow}–${lowerHigh}`;
+  }
+
+  const interpGuide = [
+    {range:"91–100", label:"Outstanding", desc:"Superior functioning; no meaningful limitations.", class:"high"},
+    {range:"81–90",  label:"Good", desc:"Good overall functioning; effective in most areas.", class:"high"},
+    {range:"71–80",  label:"Satisfactory", desc:"Slight impairment but generally functioning well.", class:"high"},
+    {range:"61–70",  label:"Mild–Moderate difficulty", desc:"Some noticeable difficulty in social/occupational areas.", class:"moderate"},
+    {range:"51–60",  label:"Moderate difficulty", desc:"Moderate problems; limited relationships or productivity.", class:"moderate"},
+    {range:"41–50",  label:"Serious impairment", desc:"Serious difficulty; major impact on work/studies/relationships.", class:"low"},
+    {range:"31–40",  label:"Major impairment", desc:"Major impairment in several areas; poor functioning.", class:"low"},
+    {range:"21–30",  label:"Very poor", desc:"Very poor functioning; major assistance needed.", class:"low"},
+    {range:"11–20",  label:"Poor / needs help", desc:"Major impairment; needs assistance in most areas.", class:"low"},
+    {range:"0–10",   label:"Grossly impaired", desc:"Profound impairment; minimal functioning.", class:"low"}
+  ];
+
+  function getInterpretation(rangeStr) {
+    if (!rangeStr || rangeStr === "??-??") return "<p>—</p>";
+
+    const mid = rangeStr.includes("–")
+      ? (parseInt(rangeStr.split("–")[0]) + parseInt(rangeStr.split("–")[1])) / 2
+      : parseInt(rangeStr);
+
+    for (const item of interpGuide) {
+      const [lo, hi] = item.range.split("–").map(Number);
+      if (mid >= lo && mid <= hi) {
+        return `<div class="level ${item.class}">
           <strong>${item.range}: ${item.label}</strong><br>
           ${item.desc}
-        </div>
-      `;
+        </div>`;
+      }
     }
-  }
-  return "<p>Range outside standard anchors — consult clinical judgment.</p>";
-}
-
-// ── Core Functions (only changed parts shown) ─────────────────────────
-function showResult() {
-  qContainer.style.display = "none";
-  resultContainer.style.display = "block";
-
-  if (!socialScore) {
-    document.getElementById("finalScore").textContent = "Incomplete";
-    document.getElementById("explanation").textContent = "Social functioning (Q14) is required";
-    interpContent.innerHTML = "";
-    return;
+    return "<p>Range outside standard anchors.</p>";
   }
 
-  let finalRange = socialScore;
-  if (pathwayScore) finalRange = getLowerRange(pathwayScore, socialScore);
-  if (hygieneScore) finalRange = getLowerRange(finalRange, hygieneScore);
+  window.resetAssessment = function() {
+    // Full reset
+    currentId = "q1";
+    answers = {};
+    pathwayScore = null;
+    hygieneScore = null;
+    socialScore = null;
 
-  document.getElementById("finalScore").textContent = finalRange;
-  document.getElementById("explanation").innerHTML = 
-    `Lower of pathway (${pathwayScore || "—"}) and social (${socialScore})` +
-    (hygieneScore ? ` (hygiene: ${hygieneScore})` : "");
+    // Hide result, show questions
+    resultContainer.style.display = "none";
+    qContainer.style.display = "block";
 
-  interpContent.innerHTML = getInterpretation(finalRange);
-}
+    // Reset progress
+    progressBar.style.width = "0%";
 
-// ── Other functions (renderQuestion, handleSelection, updateProgress, getLowerRange, resetAssessment) remain the same as previous version ──
-// (Omit repeating them here for brevity — copy from your last working version)
+    // Re-render first question
+    renderQuestion();
+  };
 
-function getLowerRange(a, b) {
-  if (!a || !b) return "??-??";
-  const [aLow, aHigh] = a.split(/–|-/).map(x => parseInt(x.trim(), 10));
-  const [bLow, bHigh] = b.split(/–|-/).map(x => parseInt(x.trim(), 10));
-  if (isNaN(aLow) || isNaN(bLow)) return "??-??";
-
-  const lowerLow  = Math.max(aLow, bLow);
-  const lowerHigh = Math.min(aHigh, bHigh);
-
-  if (lowerLow > lowerHigh) return aHigh < bLow ? a : b;
-  return `${lowerLow}–${lowerHigh}`;
-}
-
-// Init
-renderQuestion();   // ← call your renderQuestion() function here
+  // Start the assessment
+  renderQuestion();
+});
 </script>
 </body>
 </html>
