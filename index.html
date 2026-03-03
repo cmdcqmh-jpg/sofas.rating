@@ -200,6 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let pathwayScore = null;
   let hygieneScore = null;
   let socialScore = null;
+  let history = []; // For back navigation
 
   // DOM elements
   const qContainer = document.getElementById("questionsContainer");
@@ -244,10 +245,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (opt.next) {
+          history.push(currentId);
           currentId = opt.next;
           updateProgress();
           renderQuestion();
         } else if (currentId !== "q14") {
+          history.push(currentId);
           currentId = "q14";
           updateProgress();
           renderQuestion();
@@ -258,6 +261,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
       wrapper.appendChild(label);
     });
+
+    // Add back button if history exists
+    if (history.length > 0) {
+      const backBtn = document.createElement("button");
+      backBtn.className = "btn";
+      backBtn.style.background = "var(--gray)";
+      backBtn.style.marginTop = "20px";
+      backBtn.textContent = "← Back";
+      backBtn.addEventListener("click", () => {
+        if (history.length > 0) {
+          currentId = history.pop();
+          updateProgress();
+          renderQuestion();
+        }
+      });
+      wrapper.appendChild(backBtn);
+    }
 
     qContainer.appendChild(wrapper);
   }
@@ -271,23 +291,19 @@ document.addEventListener('DOMContentLoaded', () => {
   function showResult() {
     qContainer.style.display = "none";
     resultContainer.style.display = "block";
-
     if (!socialScore) {
       document.getElementById("finalScore").textContent = "Incomplete";
       document.getElementById("explanation").textContent = "Social functioning (Q14) is required";
       interpContent.innerHTML = "";
       return;
     }
-
     let finalRange = socialScore;
     if (pathwayScore) finalRange = getLowerRange(pathwayScore, socialScore);
     if (hygieneScore) finalRange = getLowerRange(finalRange, hygieneScore);
-
     document.getElementById("finalScore").textContent = finalRange;
     document.getElementById("explanation").textContent =
       `Lower of pathway (${pathwayScore || "—"}) and social (${socialScore})` +
       (hygieneScore ? ` (hygiene: ${hygieneScore})` : "");
-
     interpContent.innerHTML = getInterpretation(finalRange);
   }
 
@@ -296,10 +312,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const [aLow, aHigh] = a.split(/–|-/).map(n => parseInt(n.trim()));
     const [bLow, bHigh] = b.split(/–|-/).map(n => parseInt(n.trim()));
     if (isNaN(aLow) || isNaN(bLow)) return "??-??";
-
     const lowerLow = Math.max(aLow, bLow);
     const lowerHigh = Math.min(aHigh, bHigh);
-
     if (lowerLow > lowerHigh) {
       return aHigh < bLow ? a : b;
     }
@@ -308,15 +322,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const interpGuide = [
     {range:"91–100", label:"Outstanding", desc:"Superior functioning; no meaningful limitations.", class:"high"},
-    {range:"81–90",  label:"Good", desc:"Good overall functioning; effective in most areas.", class:"high"},
-    {range:"71–80",  label:"Satisfactory", desc:"Slight impairment but generally functioning well.", class:"high"},
-    {range:"61–70",  label:"Mild–Moderate difficulty", desc:"Some noticeable difficulty in social/occupational areas.", class:"moderate"},
-    {range:"51–60",  label:"Moderate difficulty", desc:"Moderate problems; limited relationships or productivity.", class:"moderate"},
-    {range:"41–50",  label:"Serious impairment", desc:"Serious difficulty; major impact on work/studies/relationships.", class:"low"},
-    {range:"31–40",  label:"Major impairment", desc:"Major impairment in several areas; poor functioning.", class:"low"},
-    {range:"21–30",  label:"Very poor", desc:"Very poor functioning; major assistance needed.", class:"low"},
-    {range:"11–20",  label:"Poor / needs help", desc:"Major impairment; needs assistance in most areas.", class:"low"},
-    {range:"0–10",   label:"Grossly impaired", desc:"Profound impairment; minimal functioning.", class:"low"}
+    {range:"81–90", label:"Good", desc:"Good overall functioning; effective in most areas.", class:"high"},
+    {range:"71–80", label:"Satisfactory", desc:"Slight impairment but generally functioning well.", class:"high"},
+    {range:"61–70", label:"Mild–Moderate difficulty", desc:"Some noticeable difficulty in social/occupational areas.", class:"moderate"},
+    {range:"51–60", label:"Moderate difficulty", desc:"Moderate problems; limited relationships or productivity.", class:"moderate"},
+    {range:"41–50", label:"Serious impairment", desc:"Serious difficulty; major impact on work/studies/relationships.", class:"low"},
+    {range:"31–40", label:"Major impairment", desc:"Major impairment in several areas; poor functioning.", class:"low"},
+    {range:"21–30", label:"Very poor", desc:"Very poor functioning; major assistance needed.", class:"low"},
+    {range:"11–20", label:"Poor / needs help", desc:"Major impairment; needs assistance in most areas.", class:"low"},
+    {range:"0–10", label:"Grossly impaired", desc:"Profound impairment; minimal functioning.", class:"low"}
   ];
 
   function getInterpretation(rangeStr) {
@@ -345,6 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
     pathwayScore = null;
     hygieneScore = null;
     socialScore = null;
+    history = []; // Clear history on reset
 
     // Hide result, show questions
     resultContainer.style.display = "none";
