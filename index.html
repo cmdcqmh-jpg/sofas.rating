@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SOFAS Score Calculator (Restart Fixed)</title>
+<title>SOFAS Score Calculator</title>
 <style>
   :root {
     --primary: #4f46e5;
@@ -122,6 +122,12 @@
     transform:translateY(-2px);
     box-shadow:0 6px 16px rgba(79,70,229,0.3);
   }
+  .btn.back {
+    background:var(--gray);
+  }
+  .btn.back:hover {
+    background:#4b5563;
+  }
   .interpretation {
     margin-top:32px;
     padding-top:24px;
@@ -154,12 +160,10 @@
       <h2>Final SOFAS Score Range</h2>
       <div class="score-display" id="finalScore">-- – --</div>
       <p id="explanation"></p>
-
       <div class="interpretation">
         <h3>Score Interpretation Guide</h3>
         <div id="interpretationContent"></div>
       </div>
-
       <button class="btn" onclick="resetAssessment()">Restart Assessment</button>
     </div>
   </div>
@@ -168,7 +172,6 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
-  // Questions
   const questions = [
     {id:"q1", text:"Does the client have the need for a work role?", options:[{text:"Yes", next:"q2"},{text:"No", next:"q11"}]},
     {id:"q2", text:"Is this rating during in-patient or day-patient & outpatient service?", options:[{text:"In-patient", next:"q3"},{text:"Day-patient & outpatient service", next:"q5"}]},
@@ -194,24 +197,36 @@ document.addEventListener('DOMContentLoaded', () => {
     ], isSocial:true}
   ];
 
-  // State
   let currentId = "q1";
   let answers = {};
   let pathwayScore = null;
   let hygieneScore = null;
   let socialScore = null;
-  let history = []; // For back navigation
+  let history = [];
 
-  // DOM elements
   const qContainer = document.getElementById("questionsContainer");
   const resultContainer = document.getElementById("resultContainer");
   const progressBar = document.getElementById("progressBar");
   const interpContent = document.getElementById("interpretationContent");
 
+  function clearScoreForQuestion(qid) {
+    const q = questions.find(qq => qq.id === qid);
+    if (!q) return;
+
+    if (q.isHygiene) {
+      hygieneScore = null;
+    } else if (q.isSocial) {
+      socialScore = null;
+    } else if (!q.isHygiene && !q.isSocial) {
+      // most questions affect pathwayScore
+      pathwayScore = null;
+    }
+  }
+
   function renderQuestion() {
     qContainer.innerHTML = "";
 
-    const q = questions.find(q => q.id === currentId);
+    const q = questions.find(qq => qq.id === currentId);
     if (!q) return;
 
     const wrapper = document.createElement("div");
@@ -230,51 +245,60 @@ document.addEventListener('DOMContentLoaded', () => {
       input.type = "radio";
       input.name = q.id;
       input.value = i;
-      if (answers[q.id] === i) input.checked = true;
+      // IMPORTANT: when going back → do NOT pre-check anything
+      // input.checked = (answers[q.id] === i);   ← removed
 
       label.appendChild(input);
       label.appendChild(document.createTextNode(" " + opt.text));
 
-      label.addEventListener("change", () => {
+      input.addEventListener("change", function() {
+        if (!this.checked) return;
+
+        // Save new answer
         answers[q.id] = i;
 
+        // Save score if this option has one
         if (opt.score) {
-          if (q.isHygiene) hygieneScore = opt.score;
-          else if (q.isSocial) socialScore = opt.score;
-          else pathwayScore = opt.score;
+          if (q.isHygiene)      hygieneScore = opt.score;
+          else if (q.isSocial)  socialScore  = opt.score;
+          else                  pathwayScore = opt.score;
         }
 
+        // Move forward
         if (opt.next) {
           history.push(currentId);
           currentId = opt.next;
-          updateProgress();
-          renderQuestion();
         } else if (currentId !== "q14") {
           history.push(currentId);
           currentId = "q14";
-          updateProgress();
-          renderQuestion();
         } else {
           showResult();
+          return;
         }
+
+        updateProgress();
+        renderQuestion();
       });
 
       wrapper.appendChild(label);
     });
 
-    // Add back button if history exists
+    // Back button
     if (history.length > 0) {
       const backBtn = document.createElement("button");
-      backBtn.className = "btn";
-      backBtn.style.background = "var(--gray)";
-      backBtn.style.marginTop = "20px";
+      backBtn.className = "btn back";
       backBtn.textContent = "← Back";
       backBtn.addEventListener("click", () => {
-        if (history.length > 0) {
-          currentId = history.pop();
-          updateProgress();
-          renderQuestion();
-        }
+        if (history.length === 0) return;
+
+        const prevId = history.pop();
+        // Clear answer & score from the question we're leaving (current one)
+        delete answers[currentId];
+        clearScoreForQuestion(currentId);
+
+        currentId = prevId;
+        updateProgress();
+        renderQuestion();
       });
       wrapper.appendChild(backBtn);
     }
@@ -291,19 +315,23 @@ document.addEventListener('DOMContentLoaded', () => {
   function showResult() {
     qContainer.style.display = "none";
     resultContainer.style.display = "block";
+
     if (!socialScore) {
       document.getElementById("finalScore").textContent = "Incomplete";
       document.getElementById("explanation").textContent = "Social functioning (Q14) is required";
       interpContent.innerHTML = "";
       return;
     }
+
     let finalRange = socialScore;
     if (pathwayScore) finalRange = getLowerRange(pathwayScore, socialScore);
     if (hygieneScore) finalRange = getLowerRange(finalRange, hygieneScore);
+
     document.getElementById("finalScore").textContent = finalRange;
     document.getElementById("explanation").textContent =
       `Lower of pathway (${pathwayScore || "—"}) and social (${socialScore})` +
       (hygieneScore ? ` (hygiene: ${hygieneScore})` : "");
+
     interpContent.innerHTML = getInterpretation(finalRange);
   }
 
@@ -314,9 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isNaN(aLow) || isNaN(bLow)) return "??-??";
     const lowerLow = Math.max(aLow, bLow);
     const lowerHigh = Math.min(aHigh, bHigh);
-    if (lowerLow > lowerHigh) {
-      return aHigh < bLow ? a : b;
-    }
+    if (lowerLow > lowerHigh) return aHigh < bLow ? a : b;
     return `${lowerLow}–${lowerHigh}`;
   }
 
@@ -335,11 +361,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function getInterpretation(rangeStr) {
     if (!rangeStr || rangeStr === "??-??") return "<p>—</p>";
-
     const mid = rangeStr.includes("–")
       ? (parseInt(rangeStr.split("–")[0]) + parseInt(rangeStr.split("–")[1])) / 2
       : parseInt(rangeStr);
-
     for (const item of interpGuide) {
       const [lo, hi] = item.range.split("–").map(Number);
       if (mid >= lo && mid <= hi) {
@@ -353,26 +377,18 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   window.resetAssessment = function() {
-    // Full reset
     currentId = "q1";
     answers = {};
     pathwayScore = null;
     hygieneScore = null;
     socialScore = null;
-    history = []; // Clear history on reset
-
-    // Hide result, show questions
+    history = [];
     resultContainer.style.display = "none";
     qContainer.style.display = "block";
-
-    // Reset progress
     progressBar.style.width = "0%";
-
-    // Re-render first question
     renderQuestion();
   };
 
-  // Start the assessment
   renderQuestion();
 });
 </script>
